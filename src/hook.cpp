@@ -33,7 +33,17 @@ namespace hooks
 		}
 	}
 
-	void CombatEventFixes::UpdateCombatTarget(RE::Actor* a_actor){
+    bool CombatEventFixes::IsCombatDisabled(RE::Actor* a_actor) {
+
+        if (GetBoolVariable(a_actor, "IsStaggering") || GetBoolVariable(a_actor, "IsRecoiling") || a_actor->AsActorState()->GetKnockState() != RE::KNOCK_STATE_ENUM::kNormal) 
+		{
+           return true; 
+        }
+
+        return false;
+    }
+
+    void CombatEventFixes::UpdateCombatTarget(RE::Actor* a_actor){
 		auto CTarget = a_actor->GetActorRuntimeData().currentCombatTarget.get().get();
 		if (!CTarget) {
 			auto combatGroup = a_actor->GetCombatGroup();
