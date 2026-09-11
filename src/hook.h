@@ -29,9 +29,9 @@ namespace hooks
 
 	bool GetshouldHelp(const RE::Actor *p_ally, const RE::Actor *a_actor);
 	bool IsValidLifeState(RE::Actor *a_actor, bool checkDeath = false);
+    
 
-
-	class CombatEventFixes
+    class CombatEventFixes
 	{
 	public:
 
@@ -63,7 +63,9 @@ namespace hooks
 		static float GetFloatVariable(RE::Actor *a_actor, std::string a_string);
 		void Evaluate_Combat_AI(RE::Actor *a_actor);
 
-		std::shared_mutex mtx_Timer;
+        bool IsCombatDisabled(RE::Actor* a_actor);
+
+        std::shared_mutex mtx_Timer;
 
 		std::unordered_map<RE::Actor *, std::vector<std::tuple<RE::Actor *, std::chrono::steady_clock::time_point, std::chrono::milliseconds, std::string>>> _Timer;
 

@@ -305,12 +305,7 @@ namespace hooks
 				logger::info("{} might be stuck in combat. No targets found. Evaluating AI", a_actor->GetName());
 				a_actor->EvaluatePackage(true, true);
 			}
-			else if (isInactive(a_actor))
-			{
-				logger::info("{} looks inactive in combat. Re-Evaluting AI and targets", a_actor->GetName());
-				a_actor->EvaluatePackage(true);
-				UpdateCombatTarget(a_actor);
-			}
+			
 		}
 		else
 		{
@@ -320,33 +315,14 @@ namespace hooks
 				auto currentTarget = runtimeData.currentCombatTarget.get();
 				auto H = CombatEventFixes::GetSingleton();
 
-				if (!(a_actor->IsAttacking() || IsCasting(a_actor)) && (!IsMoving(a_actor) || isInactive(a_actor)))
+				if (!(a_actor->IsAttacking() || IsCasting(a_actor)) && !IsMoving(a_actor) && !IsCombatDisabled(a_actor) && !currentTarget)
 				{
-					if (!currentTarget)
-					{
-						logger::info("{} might be stuck in combat. {} is not attacking or casting or moving. No combat group found. Evaluting AI", a_actor->GetName(), a_actor->GetName());
-						a_actor->EvaluatePackage(true, true);
-					}
-					else if (isInactive(a_actor))
-					{
-						logger::info("{} looks inactive in combat. Re-Evaluting AI and targets", a_actor->GetName());
-						a_actor->EvaluatePackage(true);
-						UpdateCombatTarget(a_actor);
-					}
+					logger::info("{} might be stuck in combat. {} is not attacking or casting or moving. No combat group found. Evaluting AI", a_actor->GetName(), a_actor->GetName());
+					a_actor->EvaluatePackage(true, true);
 				}
-				else if (IsCasting(a_actor) && !IsMoving(a_actor) && !currentTarget)
+				else if (IsCasting(a_actor) && !IsMoving(a_actor) && !IsCombatDisabled(a_actor) && !currentTarget)
 				{
 					logger::info("{} might be stuck in combat. {} is casting but isn't moving and doesn't have a combat group. Evaluting AI", a_actor->GetName(), a_actor->GetName());
-					a_actor->EvaluatePackage(true, true);
-				}
-				else if (!currentTarget)
-				{
-					logger::info("{} might be stuck in combat. No combat target or combat group found. Evaluting AI", a_actor->GetName());
-					a_actor->EvaluatePackage(true, true);
-				}
-				else if (currentTarget && currentTarget.get() && !IsValidLifeState(currentTarget.get(), true))
-				{
-					logger::info("{} might be stuck in combat. No combat group found. {} is the combatTarget but is dead. Evaluting AI", a_actor->GetName(), currentTarget.get()->GetName());
 					a_actor->EvaluatePackage(true, true);
 				}
 			}
@@ -372,25 +348,12 @@ namespace hooks
 				auto &runtimeData = a_actor->GetActorRuntimeData();
 				auto currentTarget = runtimeData.currentCombatTarget.get();
 
-				if (!(a_actor->IsAttacking() || IsCasting(a_actor)) && (!IsMoving(a_actor) || isInactive(a_actor)))
-				{
-					if (!currentTarget || isInactive(a_actor))
-					{
-						a_actor->SetGraphVariableBool("bPCEF_IsUpdating", true);
-						RegisterforUpdate(a_actor, std::forward_as_tuple(nullptr, std::chrono::steady_clock::now(), 3000ms, "EvaluateAI_NoTarget_Update"));
-					}
-				}
-				else if (IsCasting(a_actor) && !IsMoving(a_actor) && !currentTarget)
+				if (!(a_actor->IsAttacking() || IsCasting(a_actor)) && !IsMoving(a_actor) && !IsCombatDisabled(a_actor) && !currentTarget)
 				{
 					a_actor->SetGraphVariableBool("bPCEF_IsUpdating", true);
 					RegisterforUpdate(a_actor, std::forward_as_tuple(nullptr, std::chrono::steady_clock::now(), 3000ms, "EvaluateAI_NoTarget_Update"));
 				}
-				else if (!currentTarget)
-				{
-					a_actor->SetGraphVariableBool("bPCEF_IsUpdating", true);
-					RegisterforUpdate(a_actor, std::forward_as_tuple(nullptr, std::chrono::steady_clock::now(), 3000ms, "EvaluateAI_NoTarget_Update"));
-				}
-				else if (currentTarget && currentTarget.get() && !IsValidLifeState(currentTarget.get(), true))
+				else if (IsCasting(a_actor) && !IsMoving(a_actor) && !IsCombatDisabled(a_actor) && !currentTarget)
 				{
 					a_actor->SetGraphVariableBool("bPCEF_IsUpdating", true);
 					RegisterforUpdate(a_actor, std::forward_as_tuple(nullptr, std::chrono::steady_clock::now(), 3000ms, "EvaluateAI_NoTarget_Update"));
