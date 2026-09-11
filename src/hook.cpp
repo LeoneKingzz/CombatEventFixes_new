@@ -298,8 +298,6 @@ namespace hooks
 			else if (isInactive(a_actor))
 			{
 				logger::info("{} looks inactive in combat. Re-Evaluting AI and targets", a_actor->GetName());
-				a_actor->NotifyAnimationGraph("staggerStart");
-				a_actor->NotifyAnimationGraph("staggerStop");
 				a_actor->EvaluatePackage(true);
 				UpdateCombatTarget(a_actor);
 			}
@@ -322,8 +320,6 @@ namespace hooks
 					else if (isInactive(a_actor))
 					{
 						logger::info("{} looks inactive in combat. Re-Evaluting AI and targets", a_actor->GetName());
-						a_actor->NotifyAnimationGraph("staggerStart");
-						a_actor->NotifyAnimationGraph("staggerStop");
 						a_actor->EvaluatePackage(true);
 						UpdateCombatTarget(a_actor);
 					}

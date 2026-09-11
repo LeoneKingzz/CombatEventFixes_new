@@ -8,12 +8,12 @@ void MessageHandler(SKSE::MessagingInterface::Message *a_msg)
 	{
 	case SKSE::MessagingInterface::kDataLoaded:
         // hooks::animEventHandler::Register(false, true);
-        // hooks::OnMeleeHitHook::install();
+        hooks::CombatEventFixes::install();
         // hooks::InputEventHandler::SinkEventHandlers();
         break;
 
     case SKSE::MessagingInterface::kPostPostLoad:
-        // hooks::OnMeleeHitHook::GetSingleton()->init();
+        // hooks::CombatEventFixes::GetSingleton()->init();
         break;
 
     default:
@@ -23,20 +23,17 @@ void MessageHandler(SKSE::MessagingInterface::Message *a_msg)
 }
 
 void Init() {
-    hooks::OnMeleeHitHook::install_pluginListener();
     auto messaging = SKSE::GetMessagingInterface();
     messaging->RegisterListener("SKSE", MessageHandler);
 }
 
 void Load(bool VR) {
-    // hooks::OnMeleeHitHook::install_protected();
-    hooks::InstallCombat(VR);
-    // hooks::DrinkPotionHook::Install();
+    hooks::CombatEventFixes::install_protected();
 }
 
 void onSKSEInit() {
     // const auto papyrus = SKSE::GetPapyrusInterface();
-    // papyrus->Register(hooks::OnMeleeHitHook::BindPapyrusFunctions);
+    // papyrus->Register(hooks::CombatEventFixes::BindPapyrusFunctions);
 }
 
 void PreLoad() {
