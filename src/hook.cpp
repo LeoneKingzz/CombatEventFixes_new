@@ -273,7 +273,7 @@ namespace hooks
 
 	void CombatEventFixes::Evaluate_Combat_AI(RE::Actor *a_actor)
 	{
-		if (!a_actor || !IsValidLifeState(a_actor))
+		if (a_actor == nullptr)
 		{
 			return;
 		}
@@ -310,7 +310,7 @@ namespace hooks
 		}
 		else
 		{
-			if (Actor_GetCombatState(a_actor) == RE::ACTOR_COMBAT_STATE::kCombat)
+			if (a_actor->IsInCombat())
 			{
 				// auto &runtimeData = a_actor->GetActorRuntimeData();
 				// auto currentTarget = runtimeData.currentCombatTarget.get();
@@ -335,11 +335,6 @@ namespace hooks
 	void CombatEventFixes::Update(RE::Actor* a_actor, [[maybe_unused]] float a_delta)
 	{
 		if (a_actor && a_actor->GetActorRuntimeData().currentProcess && a_actor->GetActorRuntimeData().currentProcess->InHighProcess() && a_actor->Is3DLoaded()){
-
-			if (!a_actor || !IsValidLifeState(a_actor))
-			{
-				return;
-			}
 
 			if (!a_actor->IsInCombat())
 			{
@@ -372,7 +367,7 @@ namespace hooks
 
 	void CombatEventFixes::Process_Updates(RE::Actor *a_actor, std::chrono::steady_clock::time_point time_now)
 	{
-		if(!a_actor || !IsValidLifeState(a_actor)){
+		if(a_actor == nullptr){
 			return;
 		}
 
