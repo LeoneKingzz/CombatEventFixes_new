@@ -341,7 +341,7 @@ namespace hooks
 				return;
 			}
 
-			if (Actor_GetCombatState(a_actor) != RE::ACTOR_COMBAT_STATE::kCombat)
+			if (!a_actor->IsInCombat())
 			{
 				return;
 			}
