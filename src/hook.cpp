@@ -303,7 +303,8 @@ namespace hooks
 			if (!isincombat)
 			{
 				logger::info("{} might be stuck in combat. No targets found. Evaluating AI", a_actor->GetName());
-				a_actor->EvaluatePackage(true, true);
+                // a_actor->EvaluatePackage(true, true);
+                a_actor->StopCombat();
 			}
 			
 		}
@@ -318,13 +319,15 @@ namespace hooks
 				if (!(a_actor->IsAttacking() || IsCasting(a_actor)) && !IsMoving(a_actor) && !IsCombatDisabled(a_actor))
 				{
 					logger::info("{} might be stuck in combat. {} is not attacking or casting or moving. No combat group found. Evaluting AI", a_actor->GetName(), a_actor->GetName());
-					a_actor->EvaluatePackage(true, true);
-				}
+					//a_actor->EvaluatePackage(true, true);
+                    a_actor->StopCombat();
+                }
 				else if (IsCasting(a_actor) && !IsMoving(a_actor) && !IsCombatDisabled(a_actor))
 				{
 					logger::info("{} might be stuck in combat. {} is casting but isn't moving and doesn't have a combat group. Evaluting AI", a_actor->GetName(), a_actor->GetName());
-					a_actor->EvaluatePackage(true, true);
-				}
+					//a_actor->EvaluatePackage(true, true);
+                    a_actor->StopCombat();
+                }
 			}
 		}
 	}
