@@ -67,7 +67,7 @@ namespace hooks
 
         std::shared_mutex mtx_Timer;
 
-		std::unordered_map<RE::Actor *, std::vector<std::tuple<RE::Actor *, std::chrono::steady_clock::time_point, std::chrono::milliseconds, std::string>>> _Timer;
+		std::unordered_map<RE::Actor *, std::tuple<RE::Actor *, std::chrono::steady_clock::time_point, std::chrono::milliseconds, std::string>> _Timer;
 
 	private:
 		CombatEventFixes() = default;

@@ -240,15 +240,10 @@ namespace hooks
 		std::lock_guard<std::shared_mutex> lk(mtx_Timer);
 		
 		auto itt = _Timer.find(a_actor);
+		
 		if (itt == _Timer.end())
 		{
-			std::vector<std::tuple<RE::Actor *, std::chrono::steady_clock::time_point, std::chrono::milliseconds, std::string>> Hen;
-			Hen.emplace_back(data);
-			_Timer.emplace(a_actor, Hen);
-		}
-		else
-		{
-			itt->second.emplace_back(data);
+			_Timer.emplace(a_actor, data);
 		}
 	}
 
@@ -265,7 +260,6 @@ namespace hooks
 			auto itt = _Timer.find(a_actor);
 			if (itt != _Timer.end())
 			{
-				itt->second.clear();
 				_Timer.erase(itt);
 			}
 		}
@@ -344,24 +338,18 @@ namespace hooks
                 return;
             }
 
-            if (!GetBoolVariable(a_actor, "bPCEF_IsUpdating"))
+			if (!(a_actor->IsAttacking() || IsCasting(a_actor)) && !IsMoving(a_actor) && !IsCombatDisabled(a_actor))
 			{
-				
-				if (!(a_actor->IsAttacking() || IsCasting(a_actor)) && !IsMoving(a_actor) && !IsCombatDisabled(a_actor))
-				{
-					
-					RegisterforUpdate(a_actor, std::forward_as_tuple(nullptr, std::chrono::steady_clock::now(), 3000ms, "EvaluateAI_NoTarget_Update"));
-				}
-				else if (IsCasting(a_actor) && !IsMoving(a_actor) && !IsCombatDisabled(a_actor))
-				{
-					
-					RegisterforUpdate(a_actor, std::forward_as_tuple(nullptr, std::chrono::steady_clock::now(), 3000ms, "EvaluateAI_NoTarget_Update"));
-				}
+
+				RegisterforUpdate(a_actor, std::forward_as_tuple(nullptr, std::chrono::steady_clock::now(), 3000ms, "EvaluateAI_NoTarget_Update"));
 			}
-			else
+			else if (IsCasting(a_actor) && !IsMoving(a_actor) && !IsCombatDisabled(a_actor))
 			{
-				Process_Updates(a_actor, std::chrono::steady_clock::now());
+
+				RegisterforUpdate(a_actor, std::forward_as_tuple(nullptr, std::chrono::steady_clock::now(), 3000ms, "EvaluateAI_NoTarget_Update"));
 			}
+
+			Process_Updates(a_actor, std::chrono::steady_clock::now());
 		}
 	}
 	
@@ -375,41 +363,21 @@ namespace hooks
 		std::lock_guard<std::shared_mutex> lk(mtx_Timer);
 
 		auto it = _Timer.find(a_actor);
+		
 		if (it != _Timer.end())
 		{
-			if (!it->second.empty())
+			if (duration_cast<std::chrono::milliseconds>(time_now - std::get<1>(it->second)).count() >= std::get<2>(it->second).count())
 			{
-				for (auto data : it->second)
+				switch (hash(std::get<3>(it->second).c_str(), std::get<3>(it->second).size()))
 				{
-					RE::Actor *a_target = nullptr;
-					std::chrono::steady_clock::time_point time_initial;
-					std::chrono::milliseconds time_required;
-					std::string function;
-					std::tie(a_target, time_initial, time_required, function) = data;
+				case "EvaluateAI_NoTarget_Update"_h:
+					Evaluate_Combat_AI(a_actor);
+					break;
 
-					if (duration_cast<std::chrono::milliseconds>(time_now - time_initial).count() >= time_required.count())
-					{
-						auto H = RE::TESDataHandler::GetSingleton();
-						switch (hash(function.c_str(), function.size()))
-						{
-						case "EvaluateAI_NoTarget_Update"_h:
-							Evaluate_Combat_AI(a_actor);
-							a_actor->SetGraphVariableBool("bPCEF_IsUpdating", false);
-							break;
-
-						default:
-							break;
-						}
-						std::vector<std::tuple<RE::Actor *, std::chrono::steady_clock::time_point, std::chrono::milliseconds, std::string>>::iterator position = std::find(it->second.begin(), it->second.end(), data);
-						if (position != it->second.end())
-						{
-							it->second.erase(position);
-						}
-					}
+				default:
+					break;
 				}
-			}
-			else
-			{
+
 				_Timer.erase(it);
 			}
 		}
