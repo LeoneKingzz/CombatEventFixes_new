@@ -311,16 +311,16 @@ namespace hooks
 		{
 			if (Actor_GetCombatState(a_actor) == RE::ACTOR_COMBAT_STATE::kCombat)
 			{
-				auto &runtimeData = a_actor->GetActorRuntimeData();
-				auto currentTarget = runtimeData.currentCombatTarget.get();
-				auto H = CombatEventFixes::GetSingleton();
+				// auto &runtimeData = a_actor->GetActorRuntimeData();
+				// auto currentTarget = runtimeData.currentCombatTarget.get();
+				// auto H = CombatEventFixes::GetSingleton();
 
-				if (!(a_actor->IsAttacking() || IsCasting(a_actor)) && !IsMoving(a_actor) && !IsCombatDisabled(a_actor) && !currentTarget)
+				if (!(a_actor->IsAttacking() || IsCasting(a_actor)) && !IsMoving(a_actor) && !IsCombatDisabled(a_actor))
 				{
 					logger::info("{} might be stuck in combat. {} is not attacking or casting or moving. No combat group found. Evaluting AI", a_actor->GetName(), a_actor->GetName());
 					a_actor->EvaluatePackage(true, true);
 				}
-				else if (IsCasting(a_actor) && !IsMoving(a_actor) && !IsCombatDisabled(a_actor) && !currentTarget)
+				else if (IsCasting(a_actor) && !IsMoving(a_actor) && !IsCombatDisabled(a_actor))
 				{
 					logger::info("{} might be stuck in combat. {} is casting but isn't moving and doesn't have a combat group. Evaluting AI", a_actor->GetName(), a_actor->GetName());
 					a_actor->EvaluatePackage(true, true);
@@ -345,15 +345,15 @@ namespace hooks
 
 			if (!GetBoolVariable(a_actor, "bPCEF_IsUpdating"))
 			{
-				auto &runtimeData = a_actor->GetActorRuntimeData();
-				auto currentTarget = runtimeData.currentCombatTarget.get();
+				// auto &runtimeData = a_actor->GetActorRuntimeData();
+				// auto currentTarget = runtimeData.currentCombatTarget.get();
 
-				if (!(a_actor->IsAttacking() || IsCasting(a_actor)) && !IsMoving(a_actor) && !IsCombatDisabled(a_actor) && !currentTarget)
+				if (!(a_actor->IsAttacking() || IsCasting(a_actor)) && !IsMoving(a_actor) && !IsCombatDisabled(a_actor))
 				{
 					a_actor->SetGraphVariableBool("bPCEF_IsUpdating", true);
 					RegisterforUpdate(a_actor, std::forward_as_tuple(nullptr, std::chrono::steady_clock::now(), 3000ms, "EvaluateAI_NoTarget_Update"));
 				}
-				else if (IsCasting(a_actor) && !IsMoving(a_actor) && !IsCombatDisabled(a_actor) && !currentTarget)
+				else if (IsCasting(a_actor) && !IsMoving(a_actor) && !IsCombatDisabled(a_actor))
 				{
 					a_actor->SetGraphVariableBool("bPCEF_IsUpdating", true);
 					RegisterforUpdate(a_actor, std::forward_as_tuple(nullptr, std::chrono::steady_clock::now(), 3000ms, "EvaluateAI_NoTarget_Update"));
