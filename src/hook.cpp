@@ -165,7 +165,7 @@ namespace hooks
 
 		RE::BSEventNotifyControl ProcessEvent(const RE::TESDeathEvent *event, RE::BSTEventSource<RE::TESDeathEvent> *)
 		{
-			if (!event || !event->actorDying)
+			if (!event || !event->actorDying || !event->actorKiller)
 			{
 				return RE::BSEventNotifyControl::kContinue;
 			}
