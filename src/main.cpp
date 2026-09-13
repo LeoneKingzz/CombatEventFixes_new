@@ -1,6 +1,6 @@
 #include "hook.h"
 
-constexpr auto kTrampolineSize = 14;
+// constexpr auto kTrampolineSize = 14;
 
 void MessageHandler(SKSE::MessagingInterface::Message *a_msg)
 {
@@ -82,7 +82,7 @@ SKSEPluginLoad(const SKSE::LoadInterface* a_skse) {
     logger::info("Loaded plugin");
     
     SKSE::Init(a_skse, false);
-    SKSE::AllocTrampoline(kTrampolineSize);
+    // SKSE::AllocTrampoline(kTrampolineSize);
     PreLoad();
     onSKSEInit();
     Init();
