@@ -29,7 +29,7 @@ namespace hooks
 
 	bool GetshouldHelp(const RE::Actor *p_ally, const RE::Actor *a_actor);
 	bool IsValidLifeState(RE::Actor *a_actor, bool checkDeath = false);
-	bool isLastHostileInRange(const RE::Actor *attacker, const RE::Actor *victim, float range);
+	bool isLastHostileInRange(RE::Actor *attacker, RE::Actor *victim, float range);
 
 	class CombatEventFixes
 	{

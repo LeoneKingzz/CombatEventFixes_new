@@ -105,7 +105,7 @@ namespace hooks
 		return result;
 	}
 
-	bool isLastHostileInRange(const RE::Actor *attacker, const RE::Actor *victim, float range)
+	bool isLastHostileInRange(RE::Actor *attacker, RE::Actor *victim, float range)
 	{
 		auto process_lists = RE::ProcessLists::GetSingleton();
 		if (!process_lists)
@@ -128,7 +128,7 @@ namespace hooks
 				continue;
 
 			float dist = actor->GetPosition().GetDistance(attacker->GetPosition());
-			if ((dist < range) && actor->IsHostileToActor(const_cast<RE::Actor *>(attacker)) && Actor_GetCombatState(actor) == RE::ACTOR_COMBAT_STATE::kCombat)
+			if ((dist < range) && actor->IsHostileToActor(attacker) && Actor_GetCombatState(actor) == RE::ACTOR_COMBAT_STATE::kCombat)
 			{
 				logger::debug("{} in range!", actor->GetName());
 				return false;
@@ -139,7 +139,7 @@ namespace hooks
 			if (RE::Actor *player = RE::PlayerCharacter::GetSingleton(); player)
 			{
 				float dist = player->GetPosition().GetDistance(attacker->GetPosition());
-				if ((dist < range) && const_cast<RE::Actor *>(attacker)->IsHostileToActor(player) && player->IsInCombat())
+				if ((dist < range) && attacker->IsHostileToActor(player) && player->IsInCombat())
 					return false;
 			}
 
