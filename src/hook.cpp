@@ -329,7 +329,7 @@ namespace hooks
 
 	void CombatEventFixes::Evaluate_Combat_AI(RE::Actor *a_actor, bool initial)
 	{
-		if (a_actor == nullptr)
+		if (a_actor == nullptr || a_actor->IsPlayerRef())
 		{
 			return;
 		}
