@@ -105,6 +105,46 @@ namespace hooks
 		return result;
 	}
 
+	bool isLastHostileInRange(const RE::Actor *attacker, const RE::Actor *victim, float range)
+	{
+		auto process_lists = RE::ProcessLists::GetSingleton();
+		if (!process_lists)
+		{
+			logger::error("Failed to get ProcessLists!");
+			return false;
+		}
+		auto n_load_actors = process_lists->numberHighActors;
+		if (n_load_actors == 0)
+			return true;
+
+		for (auto actor_handle : process_lists->highActorHandles)
+		{
+			if (!actor_handle || !actor_handle.get())
+				continue;
+
+			auto actor = actor_handle.get().get();
+
+			if ((actor == attacker) || (actor == victim) || actor->IsDead() || actor->AsActorState()->IsBleedingOut() || actor->IsDisabled())
+				continue;
+
+			float dist = actor->GetPosition().GetDistance(attacker->GetPosition());
+			if ((dist < range) && actor->IsHostileToActor(const_cast<RE::Actor *>(attacker)) && Actor_GetCombatState(actor) == RE::ACTOR_COMBAT_STATE::kCombat)
+			{
+				logger::debug("{} in range!", actor->GetName());
+				return false;
+			}
+		}
+		// EXTRA: CHECK PLAYER
+		if (!attacker->IsPlayerRef() && !victim->IsPlayerRef())
+			if (RE::Actor *player = RE::PlayerCharacter::GetSingleton(); player)
+			{
+				float dist = player->GetPosition().GetDistance(attacker->GetPosition());
+				if ((dist < range) && const_cast<RE::Actor *>(attacker)->IsHostileToActor(player) && player->IsInCombat())
+					return false;
+			}
+
+		return true;
+	}
 
 	class OurEventSink :
 		public RE::BSTEventSink<RE::TESCombatEvent>,
@@ -131,19 +171,41 @@ namespace hooks
 			}
 			const auto a_actor = event->actorDying->As<RE::Actor>();
 
-			if (!a_actor)
+			if (!a_actor || a_actor->IsPlayerRef())
 			{
 				return RE::BSEventNotifyControl::kContinue;
 			}
 
-			if (a_actor->IsPlayerRef())
-			{
-				CombatEventFixes::GetSingleton()->ClearUpdates(a_actor, true);
+			// if (a_actor->IsPlayerRef())
+			// {
+			// 	CombatEventFixes::GetSingleton()->ClearUpdates(a_actor, true);
 				
-			}
-			else
+			// }
+			// else
+			// {
+			// 	CombatEventFixes::GetSingleton()->ClearUpdates(a_actor);
+			// }
+
+			const auto a_killer = event->actorKiller->As<RE::Actor>();
+
+			if (!a_killer)
 			{
-				CombatEventFixes::GetSingleton()->ClearUpdates(a_actor);
+				return RE::BSEventNotifyControl::kContinue;
+			}
+
+			if (isLastHostileInRange(a_killer, a_actor, 2048.0f))
+			{
+
+				if (const auto combatGroup = a_killer->GetCombatGroup(); combatGroup)
+				{
+					for (auto &memberData : combatGroup->members)
+					{
+						if (auto ally = memberData.memberHandle.get(); ally)
+						{
+							CombatEventFixes::GetSingleton()->Evaluate_Combat_AI(ally.get(), true);
+						}
+					}
+				}
 			}
 
 			return RE::BSEventNotifyControl::kContinue;
@@ -265,78 +327,19 @@ namespace hooks
 		}
 	}
 
-	void CombatEventFixes::Evaluate_Combat_AI(RE::Actor *a_actor)
+	void CombatEventFixes::Evaluate_Combat_AI(RE::Actor *a_actor, bool initial)
 	{
 		if (a_actor == nullptr)
 		{
 			return;
 		}
 
-		if (const auto combatGroup = a_actor->GetCombatGroup(); combatGroup)
+		if(initial)
 		{
-			bool isincombat = false;
-			for (const auto &targetData : combatGroup->targets)
+			if (Actor_GetCombatState(a_actor) != RE::ACTOR_COMBAT_STATE::kCombat)
 			{
-				if (const auto targetHandle = targetData.targetHandle; targetHandle)
-				{
-					if (const auto targetPtr = targetData.targetHandle.get(); targetPtr)
-					{
-						if (const auto target = targetPtr.get(); target)
-						{
-							if (IsValidLifeState(target, true))
-							{
-								isincombat = true;
-								break;
-							}
-						}
-					}
-				}
-
-				continue;
+				return;
 			}
-			if (!isincombat)
-			{
-				logger::info("{} might be stuck in combat. No targets found. Evaluating AI", a_actor->GetName());
-                // a_actor->EvaluatePackage(true, true);
-                a_actor->StopCombat();
-			}
-			
-		}
-		else
-		{
-			if (Actor_GetCombatState(a_actor) == RE::ACTOR_COMBAT_STATE::kCombat)
-			{
-				// auto &runtimeData = a_actor->GetActorRuntimeData();
-				// auto currentTarget = runtimeData.currentCombatTarget.get();
-				// auto H = CombatEventFixes::GetSingleton();
-
-				if (!(a_actor->IsAttacking() || IsCasting(a_actor)) && !IsMoving(a_actor) && !IsCombatDisabled(a_actor))
-				{
-					logger::info("{} might be stuck in combat. {} is not attacking or casting or moving. No combat group found. Evaluting AI", a_actor->GetName(), a_actor->GetName());
-					//a_actor->EvaluatePackage(true, true);
-                    a_actor->StopCombat();
-                }
-				else if (IsCasting(a_actor) && !IsMoving(a_actor) && !IsCombatDisabled(a_actor))
-				{
-					logger::info("{} might be stuck in combat. {} is casting but isn't moving and doesn't have a combat group. Evaluting AI", a_actor->GetName(), a_actor->GetName());
-					//a_actor->EvaluatePackage(true, true);
-                    a_actor->StopCombat();
-                }
-			}
-		}
-	}
-
-	void CombatEventFixes::Update(RE::Actor* a_actor, [[maybe_unused]] float a_delta)
-	{
-		if (a_actor && a_actor->GetActorRuntimeData().currentProcess && a_actor->GetActorRuntimeData().currentProcess->InHighProcess() && a_actor->Is3DLoaded()){
-
-            // auto &runtimeData = a_actor->GetActorRuntimeData();
-            // auto currentTarget = runtimeData.currentCombatTarget.get();
-
-            if (Actor_GetCombatState(a_actor) != RE::ACTOR_COMBAT_STATE::kCombat) 
-			{
-                return;
-            }
 
 			if (!(a_actor->IsAttacking() || IsCasting(a_actor)) && !IsMoving(a_actor) && !IsCombatDisabled(a_actor))
 			{
@@ -348,6 +351,85 @@ namespace hooks
 
 				RegisterforUpdate(a_actor, std::forward_as_tuple(nullptr, std::chrono::steady_clock::now(), 3000ms, "EvaluateAI_NoTarget_Update"));
 			}
+
+		}else
+		{
+			if (const auto combatGroup = a_actor->GetCombatGroup(); combatGroup)
+			{
+				bool isincombat = false;
+				for (const auto &targetData : combatGroup->targets)
+				{
+					if (const auto targetHandle = targetData.targetHandle; targetHandle)
+					{
+						if (const auto targetPtr = targetData.targetHandle.get(); targetPtr)
+						{
+							if (const auto target = targetPtr.get(); target)
+							{
+								if (IsValidLifeState(target, true))
+								{
+									isincombat = true;
+									break;
+								}
+							}
+						}
+					}
+
+					continue;
+				}
+				if (!isincombat)
+				{
+					logger::info("{} might be stuck in combat. No targets found. Evaluating AI", a_actor->GetName());
+					// a_actor->EvaluatePackage(true, true);
+					a_actor->StopCombat();
+				}
+			}
+			else
+			{
+				if (Actor_GetCombatState(a_actor) == RE::ACTOR_COMBAT_STATE::kCombat)
+				{
+					// auto &runtimeData = a_actor->GetActorRuntimeData();
+					// auto currentTarget = runtimeData.currentCombatTarget.get();
+					// auto H = CombatEventFixes::GetSingleton();
+
+					if (!(a_actor->IsAttacking() || IsCasting(a_actor)) && !IsMoving(a_actor) && !IsCombatDisabled(a_actor))
+					{
+						logger::info("{} might be stuck in combat. {} is not attacking or casting or moving. No combat group found. Evaluting AI", a_actor->GetName(), a_actor->GetName());
+						// a_actor->EvaluatePackage(true, true);
+						a_actor->StopCombat();
+					}
+					else if (IsCasting(a_actor) && !IsMoving(a_actor) && !IsCombatDisabled(a_actor))
+					{
+						logger::info("{} might be stuck in combat. {} is casting but isn't moving and doesn't have a combat group. Evaluting AI", a_actor->GetName(), a_actor->GetName());
+						// a_actor->EvaluatePackage(true, true);
+						a_actor->StopCombat();
+					}
+				}
+			}
+		}
+	}
+
+	void CombatEventFixes::Update(RE::Actor* a_actor, [[maybe_unused]] float a_delta)
+	{
+		if (a_actor && a_actor->GetActorRuntimeData().currentProcess && a_actor->GetActorRuntimeData().currentProcess->InHighProcess() && a_actor->Is3DLoaded()){
+
+            // auto &runtimeData = a_actor->GetActorRuntimeData();
+            // auto currentTarget = runtimeData.currentCombatTarget.get();
+
+            // if (Actor_GetCombatState(a_actor) != RE::ACTOR_COMBAT_STATE::kCombat) 
+			// {
+            //     return;
+            // }
+
+			// if (!(a_actor->IsAttacking() || IsCasting(a_actor)) && !IsMoving(a_actor) && !IsCombatDisabled(a_actor))
+			// {
+
+			// 	RegisterforUpdate(a_actor, std::forward_as_tuple(nullptr, std::chrono::steady_clock::now(), 3000ms, "EvaluateAI_NoTarget_Update"));
+			// }
+			// else if (IsCasting(a_actor) && !IsMoving(a_actor) && !IsCombatDisabled(a_actor))
+			// {
+
+			// 	RegisterforUpdate(a_actor, std::forward_as_tuple(nullptr, std::chrono::steady_clock::now(), 3000ms, "EvaluateAI_NoTarget_Update"));
+			// }
 
 			Process_Updates(a_actor, std::chrono::steady_clock::now());
 		}

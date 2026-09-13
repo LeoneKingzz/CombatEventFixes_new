@@ -29,9 +29,9 @@ namespace hooks
 
 	bool GetshouldHelp(const RE::Actor *p_ally, const RE::Actor *a_actor);
 	bool IsValidLifeState(RE::Actor *a_actor, bool checkDeath = false);
-    
+	bool isLastHostileInRange(const RE::Actor *attacker, const RE::Actor *victim, float range);
 
-    class CombatEventFixes
+	class CombatEventFixes
 	{
 	public:
 
@@ -61,7 +61,7 @@ namespace hooks
 		static bool GetBoolVariable(RE::Actor *a_actor, std::string a_string);
 		static int GetIntVariable(RE::Actor *a_actor, std::string a_string);
 		static float GetFloatVariable(RE::Actor *a_actor, std::string a_string);
-		void Evaluate_Combat_AI(RE::Actor *a_actor);
+		void Evaluate_Combat_AI(RE::Actor *a_actor, bool initial = false);
 
         bool IsCombatDisabled(RE::Actor* a_actor);
 
