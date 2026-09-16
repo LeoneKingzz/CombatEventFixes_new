@@ -1,0 +1,40 @@
+{
+  "name": "commonlibsse-plugin",
+  "version-string": "1.0.0",
+  "description": "",
+  "license": "GPL-3.0-or-later",
+  "dependencies": [
+    {
+      "name": "directxmath",
+      "version>=": "2025-04-03"
+    },
+    {
+      "name": "directxtk",
+      "version>=": "2025-10-27"
+    },
+    {
+      "name": "fmt",
+      "version>=": "12.1.0"
+    },
+    {
+      "name": "spdlog",
+      "version>=": "1.16.0"
+    },
+    {
+      "name": "clib-util"
+    },
+    {
+      "name": "nlohmann-json"
+    },
+    {
+      "name": "minhook"
+    },
+    {
+      "name": "magic-enum"
+    },
+    {
+      "name": "xbyak"
+    }
+  ],
+  "builtin-baseline": "ee12231b20c95013c6638d845d04c91559a1d1ff"
+}
