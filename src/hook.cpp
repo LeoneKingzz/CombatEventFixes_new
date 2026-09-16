@@ -343,12 +343,10 @@ namespace hooks
 
 			if (!(a_actor->IsAttacking() || IsCasting(a_actor)) && !IsMoving(a_actor) && !IsCombatDisabled(a_actor))
 			{
-
 				RegisterforUpdate(a_actor, std::forward_as_tuple(nullptr, std::chrono::steady_clock::now(), 3000ms, "EvaluateAI_NoTarget_Update"));
 			}
 			else if (IsCasting(a_actor) && !IsMoving(a_actor) && !IsCombatDisabled(a_actor))
 			{
-
 				RegisterforUpdate(a_actor, std::forward_as_tuple(nullptr, std::chrono::steady_clock::now(), 3000ms, "EvaluateAI_NoTarget_Update"));
 			}
 
