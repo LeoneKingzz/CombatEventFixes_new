@@ -336,20 +336,7 @@ namespace hooks
 
 		if(initial)
 		{
-			if (Actor_GetCombatState(a_actor) != RE::ACTOR_COMBAT_STATE::kCombat)
-			{
-				return;
-			}
-
-			if (!(a_actor->IsAttacking() || IsCasting(a_actor)) && !IsMoving(a_actor) && !IsCombatDisabled(a_actor))
-			{
-				RegisterforUpdate(a_actor, std::forward_as_tuple(nullptr, std::chrono::steady_clock::now(), 3000ms, "EvaluateAI_NoTarget_Update"));
-			}
-			else if (IsCasting(a_actor) && !IsMoving(a_actor) && !IsCombatDisabled(a_actor))
-			{
-				RegisterforUpdate(a_actor, std::forward_as_tuple(nullptr, std::chrono::steady_clock::now(), 3000ms, "EvaluateAI_NoTarget_Update"));
-			}
-
+			RegisterforUpdate(a_actor, std::forward_as_tuple(nullptr, std::chrono::steady_clock::now(), 3000ms, "EvaluateAI_NoTarget_Update"));
 		}else
 		{
 			if (const auto combatGroup = a_actor->GetCombatGroup(); combatGroup)
@@ -374,11 +361,14 @@ namespace hooks
 
 					continue;
 				}
-				if (!isincombat)
+				if (Actor_GetCombatState(a_actor) == RE::ACTOR_COMBAT_STATE::kCombat)
 				{
-					logger::info("{} might be stuck in combat. No targets found. Evaluating AI", a_actor->GetName());
-					// a_actor->EvaluatePackage(true, true);
-					a_actor->StopCombat();
+					if (!isincombat)
+					{
+						logger::info("{} might be stuck in combat. No targets found. Evaluating AI", a_actor->GetName());
+						// a_actor->EvaluatePackage(true, true);
+						a_actor->StopCombat();
+					}
 				}
 			}
 			else
