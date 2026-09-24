@@ -299,7 +299,7 @@ namespace hooks
 
 	void CombatEventFixes::RegisterforUpdate(RE::Actor *a_actor, std::tuple<RE::Actor*, std::chrono::steady_clock::time_point, std::chrono::milliseconds, std::string> data)
 	{
-		std::lock_guard<std::shared_mutex> lk(mtx_Timer);
+		// std::lock_guard<std::shared_mutex> lk(mtx_Timer);
 		
 		auto itt = _Timer.find(a_actor);
 		
@@ -311,7 +311,7 @@ namespace hooks
 
 	void CombatEventFixes::ClearUpdates(RE::Actor *a_actor, bool clearAll)
 	{
-		std::lock_guard<std::shared_mutex> lk(mtx_Timer);
+		// std::lock_guard<std::shared_mutex> lk(mtx_Timer);
 
 		if(clearAll)
 		{
@@ -440,7 +440,7 @@ namespace hooks
 			return;
 		}
 
-		std::lock_guard<std::shared_mutex> lk(mtx_Timer);
+		// std::lock_guard<std::shared_mutex> lk(mtx_Timer);
 
 		auto it = _Timer.find(a_actor);
 		
